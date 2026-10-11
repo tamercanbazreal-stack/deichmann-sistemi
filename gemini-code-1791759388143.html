@@ -1,0 +1,1011 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Deichmann Mağaza Yönetim ve Personel Takip Sistemi</title>
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        deichmannGreen: {
+                            DEFAULT: '#006738',
+                            dark: '#004d29',
+                            light: '#008548',
+                            bg: '#E6F4ED'
+                        },
+                        deichmannDark: '#111827',
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    }
+                }
+            }
+        }
+    </script>
+    
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f3f4f6;
+            color: #111827;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        ::-webkit-scrollbar {
+            width: 4px;
+            height: 4px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #006738;
+            border-radius: 4px;
+        }
+
+        @media print {
+            body * {
+                visibility: hidden !important;
+            }
+            .printable-shift-area, .printable-shift-area * {
+                visibility: visible !important;
+            }
+            .printable-shift-area {
+                position: absolute !important;
+                left: 0 !important;
+                top: 0 !important;
+                width: 100% !important;
+                background-color: #ffffff !important;
+                color: #000000 !important;
+                padding: 10px !important;
+                margin: 0 !important;
+            }
+            .no-print {
+                display: none !important;
+            }
+            table {
+                width: 100% !important;
+                border-collapse: collapse !important;
+                font-size: 11px !important;
+            }
+            th, td {
+                border: 1px solid #333 !important;
+                padding: 6px !important;
+                color: #000 !important;
+                background: #fff !important;
+            }
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col bg-gray-100 text-deichmannDark">
+
+    <!-- AUTHENTICATION SCREEN -->
+    <div id="authScreen" class="fixed inset-0 z-50 bg-deichmannDark flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-md rounded-3xl shadow-2xl overflow-hidden border border-gray-100 flex flex-col max-h-[90vh]">
+            <div class="bg-deichmannDark text-white p-6 text-center space-y-2">
+                <div class="inline-flex bg-deichmannGreen p-3.5 rounded-2xl shadow-lg items-center justify-center">
+                    <i class="fa-solid fa-shoe-prints text-white text-2xl"></i>
+                </div>
+                <h1 class="text-xl font-bold tracking-wide">Deichmann #104</h1>
+                <p class="text-xs text-gray-400">Mağaza Yönetim ve Personel Sistemi</p>
+            </div>
+
+            <div class="flex border-b border-gray-200 bg-gray-50 p-2 gap-1">
+                <button onclick="switchAuthTab('login')" id="authTab-login" class="flex-1 py-2.5 rounded-xl text-xs font-bold transition bg-deichmannGreen text-white shadow-sm">
+                    Personel Giriş
+                </button>
+                <button onclick="switchAuthTab('register')" id="authTab-register" class="flex-1 py-2.5 rounded-xl text-xs font-bold transition text-gray-600 hover:bg-gray-200">
+                    Kayıt Ol
+                </button>
+                <button onclick="switchAuthTab('manager')" id="authTab-manager" class="flex-1 py-2.5 rounded-xl text-xs font-bold transition text-gray-600 hover:bg-gray-200">
+                    Yönetici
+                </button>
+            </div>
+
+            <div class="p-6 overflow-y-auto flex-1 space-y-6">
+                <!-- 1. Staff Login Form -->
+                <form id="form-login" onsubmit="handleStaffLogin(event)" class="space-y-4">
+                    <div class="space-y-1">
+                        <label class="text-xs font-semibold text-gray-700">Personel Numarası</label>
+                        <input type="text" id="loginStaffNo" required placeholder="Örn: 1001" class="w-full bg-gray-50 border border-gray-300 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-deichmannGreen focus:outline-none">
+                    </div>
+                    <div class="space-y-1">
+                        <label class="text-xs font-semibold text-gray-700">Şifre</label>
+                        <input type="password" id="loginPassword" required placeholder="Şifrenizi girin" class="w-full bg-gray-50 border border-gray-300 rounded-xl px-4 py-3 text-sm focus:ring-2 focus:ring-deichmannGreen focus:outline-none">
+                    </div>
+                    <button type="submit" class="w-full bg-deichmannGreen hover:bg-deichmannGreen-dark text-white font-semibold py-3 rounded-xl shadow-lg transition">
+                        Giriş Yap
+                    </button>
+                </form>
+
+                <!-- 2. Registration Form -->
+                <form id="form-register" onsubmit="handleStaffRegister(event)" class="space-y-3 hidden">
+                    <div class="grid grid-cols-2 gap-2">
+                        <div class="space-y-1">
+                            <label class="text-[11px] font-semibold text-gray-700">Personel No</label>
+                            <input type="text" id="regStaffNo" required placeholder="Örn: 1005" class="w-full bg-gray-50 border border-gray-300 rounded-xl px-3 py-2.5 text-xs focus:ring-2 focus:ring-deichmannGreen focus:outline-none">
+                        </div>
+                        <div class="space-y-1">
+                            <label class="text-[11px] font-semibold text-gray-700">Doğum Tarihi</label>
+                            <input type="date" id="regDob" required class="w-full bg-gray-50 border border-gray-300 rounded-xl px-3 py-2.5 text-xs focus:ring-2 focus:ring-deichmannGreen focus:outline-none">
+                        </div>
+                    </div>
+                    <div class="space-y-1">
+                        <label class="text-[11px] font-semibold text-gray-700">Ad</label>
+                        <input type="text" id="regName" required placeholder="Adınız" class="w-full bg-gray-50 border border-gray-300 rounded-xl px-3 py-2.5 text-xs focus:ring-2 focus:ring-deichmannGreen focus:outline-none">
+                    </div>
+                    <div class="space-y-1">
+                        <label class="text-[11px] font-semibold text-gray-700">Soyad</label>
+                        <input type="text" id="regSurname" required placeholder="Soyadınız" class="w-full bg-gray-50 border border-gray-300 rounded-xl px-3 py-2.5 text-xs focus:ring-2 focus:ring-deichmannGreen focus:outline-none">
+                    </div>
+                    <div class="space-y-1">
+                        <label class="text-[11px] font-semibold text-gray-700">Telefon Numarası</label>
+                        <input type="tel" id="regPhone" required placeholder="05XX XXX XX XX" class="w-full bg-gray-50 border border-gray-300 rounded-xl px-3 py-2.5 text-xs focus:ring-2 focus:ring-deichmannGreen focus:outline-none">
+                    </div>
+                    <div class="space-y-1">
+                        <label class="text-[11px] font-semibold text-gray-700">Şifre Belirleyin</label>
+                        <input type="password" id="regPassword" required placeholder="En az 6 karakter" class="w-full bg-gray-50 border border-gray-300 rounded-xl px-3 py-2.5 text-xs focus:ring-2 focus:ring-deichmannGreen focus:outline-none">
+                    </div>
+                    <button type="submit" class="w-full bg-deichmannGreen hover:bg-deichmannGreen-dark text-white font-semibold py-3 rounded-xl shadow-lg transition text-sm">
+                        Kayıt Ol ve Giriş Yap
+                    </button>
+                </form>
+
+                <!-- 3. Manager Login Form -->
+                <form id="form-manager" onsubmit="handleManagerLogin(event)" class="space-y-4 hidden">
+                    <div class="bg-amber-50 border border-amber-200 p-3 rounded-2xl text-xs text-amber-800 flex items-center space-x-2">
+                        <i class="fa-solid fa-shield-halved text-amber-600 text-base"></i>
+                        <span>Yönetici paneline erişmek için 6 haneli şifreyi giriniz (Varsayılan: 663322).</span>
+                    </div>
+                    <div class="space-y-1">
+                        <label class="text-xs font-semibold text-gray-700">Yönetici Güvenlik Şifresi</label>
+                        <input type="password" id="managerCodeInput" maxlength="6" required placeholder="******" class="w-full bg-gray-50 border border-gray-300 rounded-xl px-4 py-3 text-center tracking-widest text-lg font-bold focus:ring-2 focus:ring-deichmannGreen focus:outline-none">
+                    </div>
+                    <button type="submit" class="w-full bg-deichmannDark hover:bg-black text-white font-semibold py-3 rounded-xl shadow-lg transition">
+                        Yönetici Girişi Yap
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN APP CONTAINER -->
+    <div id="mainAppContainer" class="hidden flex-1 flex flex-col min-h-screen">
+        
+        <!-- Manager Security Banner -->
+        <div id="securityBanner" class="hidden bg-amber-500 text-black px-4 py-2.5 font-medium text-xs flex items-center justify-between shadow-md no-print">
+            <div class="flex items-center space-x-2 mx-auto">
+                <i class="fa-solid fa-triangle-exclamation text-base animate-pulse"></i>
+                <span><strong>Güvenlik Uyarısı:</strong> Varsayılan yönetici şifresini kullanıyorsunuz. Şifrenizi değiştirin!</span>
+                <button onclick="openProfileModal()" class="ml-3 bg-black text-white px-2.5 py-1 rounded-full text-[11px] font-semibold hover:bg-gray-800 transition">Değiştir</button>
+            </div>
+        </div>
+
+        <!-- Header -->
+        <header class="bg-deichmannDark text-white shadow-lg sticky top-0 z-40 no-print">
+            <div class="max-w-7xl mx-auto px-4 h-16 flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    <div class="bg-deichmannGreen p-2 rounded-xl flex items-center justify-center">
+                        <i class="fa-solid fa-shoe-prints text-white text-lg"></i>
+                    </div>
+                    <div>
+                        <h1 class="text-sm font-bold tracking-wide">Deichmann #104</h1>
+                        <p class="text-[10px] text-gray-400" id="headerUserRoleBadge">Mağaza Yönetimi</p>
+                    </div>
+                </div>
+
+                <div class="flex items-center space-x-2">
+                    <button onclick="openProfileModal()" class="bg-gray-800 hover:bg-gray-700 px-3 py-2 rounded-xl border border-gray-700 transition flex items-center space-x-1.5 text-xs">
+                        <i class="fa-solid fa-user-gear text-deichmannGreen"></i>
+                        <span id="headerUserName" class="font-medium hidden sm:inline">Profil</span>
+                    </button>
+                    <!-- PDF Butonu: SADECE MAĞAZA MÜDÜRÜ İÇİN (manager-only) -->
+                    <button onclick="printShiftTable()" class="bg-deichmannGreen hover:bg-deichmannGreen-dark text-white p-2.5 rounded-xl font-semibold shadow transition manager-only hidden" title="PDF / Yazdır">
+                        <i class="fa-solid fa-file-pdf"></i>
+                    </button>
+                    <button onclick="handleLogout()" class="bg-red-600/20 hover:bg-red-600 text-red-400 hover:text-white p-2.5 rounded-xl transition" title="Çıkış Yap">
+                        <i class="fa-solid fa-right-from-bracket"></i>
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Content Area -->
+        <main class="flex-1 max-w-7xl w-full mx-auto px-3 sm:px-6 py-4 space-y-4 pb-20">
+            
+            <!-- Navigation Tabs -->
+            <div class="flex overflow-x-auto gap-2 border-b border-gray-200 pb-3 no-print">
+                <button onclick="switchTab('shifts')" id="tab-shifts" class="tab-btn px-4 py-2.5 rounded-xl font-semibold text-xs transition bg-deichmannGreen text-white shadow-sm flex items-center space-x-2 whitespace-nowrap">
+                    <i class="fa-solid fa-calendar-days"></i>
+                    <span>Vardiya Planı</span>
+                </button>
+                <button onclick="switchTab('monthly')" id="tab-monthly" class="tab-btn px-4 py-2.5 rounded-xl font-semibold text-xs transition bg-white text-gray-700 hover:bg-gray-100 shadow-sm flex items-center space-x-2 whitespace-nowrap manager-only hidden">
+                    <i class="fa-solid fa-clock"></i>
+                    <span>Aylık Saatler</span>
+                </button>
+                <button onclick="switchTab('announcements')" id="tab-announcements" class="tab-btn px-4 py-2.5 rounded-xl font-semibold text-xs transition bg-white text-gray-700 hover:bg-gray-100 shadow-sm flex items-center space-x-2 whitespace-nowrap">
+                    <i class="fa-solid fa-bullhorn"></i>
+                    <span>Duyurular</span>
+                </button>
+                <button onclick="switchTab('personnel')" id="tab-personnel" class="tab-btn px-4 py-2.5 rounded-xl font-semibold text-xs transition bg-white text-gray-700 hover:bg-gray-100 shadow-sm flex items-center space-x-2 whitespace-nowrap manager-only hidden">
+                    <i class="fa-solid fa-users-gear"></i>
+                    <span>Personel Kadrosu</span>
+                </button>
+            </div>
+
+            <!-- Toast Notification -->
+            <div id="toastNotification" class="hidden fixed bottom-5 left-4 right-4 sm:left-auto sm:right-5 sm:max-w-sm z-50 bg-deichmannDark text-white px-4 py-3 rounded-2xl shadow-2xl border border-gray-800 flex items-center space-x-3 transition transform duration-300">
+                <i id="toastIcon" class="fa-solid fa-circle-check text-deichmannGreen text-lg"></i>
+                <span id="toastMessage" class="text-xs font-medium">İşlem başarıyla gerçekleştirildi.</span>
+            </div>
+
+            <!-- TAB 1: Vardiya Planı -->
+            <section id="view-shifts" class="space-y-4">
+                <div class="bg-white rounded-3xl p-4 sm:p-6 shadow-md border border-gray-100">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+                        <div>
+                            <h2 class="text-lg sm:text-xl font-bold text-deichmannDark">Haftalık Vardiya ve Mola Çizelgesi</h2>
+                            <p class="text-xs text-gray-500">Giriş, çıkış ve mola saatlerini kolayca yönetin.</p>
+                        </div>
+                        <div class="flex items-center space-x-2 no-print">
+                            <label class="text-xs font-semibold text-gray-600">Hafta:</label>
+                            <input type="week" id="weekSelector" onchange="renderShiftTable()" class="bg-gray-50 border border-gray-300 rounded-xl px-3 py-1.5 text-xs font-medium focus:ring-2 focus:ring-deichmannGreen focus:outline-none">
+                        </div>
+                    </div>
+
+                    <div class="printable-shift-area bg-white rounded-2xl border border-gray-200 overflow-hidden">
+                        <div class="hidden print:block p-4 border-b border-gray-300 text-center">
+                            <h2 class="text-lg font-bold">DEICHMANN MAĞAZA YÖNETİM SİSTEMİ</h2>
+                            <p class="text-xs text-gray-600">Personel Haftalık Vardiya ve Çalışma Çizelgesi</p>
+                            <p class="text-[10px] text-gray-500 mt-1" id="printDateBadge"></p>
+                        </div>
+
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-left border-collapse min-w-[700px]">
+                                <thead>
+                                    <tr class="bg-gray-100 text-gray-700 text-[11px] uppercase tracking-wider font-bold border-b border-gray-200">
+                                        <th class="p-3">Personel</th>
+                                        <th class="p-3 text-center">Pazartesi</th>
+                                        <th class="p-3 text-center">Salı</th>
+                                        <th class="p-3 text-center">Çarşamba</th>
+                                        <th class="p-3 text-center">Perşembe</th>
+                                        <th class="p-3 text-center">Cuma</th>
+                                        <th class="p-3 text-center">Cumartesi</th>
+                                        <th class="p-3 text-center">Pazar</th>
+                                        <th class="p-3 text-center bg-gray-200">Net Saat</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="shiftTableBody" class="divide-y divide-gray-200 text-xs">
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <div class="hidden print:flex justify-between items-center mt-8 pt-6 px-6 border-t border-gray-300 text-xs">
+                            <div>
+                                <p class="font-bold">Mağaza Müdürü Onay</p>
+                                <p class="text-gray-500 mt-6">İmza / Kaşe</p>
+                            </div>
+                            <div class="text-right">
+                                <p class="font-bold">Rapor Tarihi</p>
+                                <p class="text-gray-500 mt-6" id="printReportDate"></p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 2: Aylık Çalışma Saatleri (Yönetici) -->
+            <section id="view-monthly" class="space-y-4 hidden manager-only-section">
+                <div class="bg-white rounded-3xl p-4 sm:p-6 shadow-md border border-gray-100">
+                    <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
+                        <div>
+                            <h2 class="text-lg sm:text-xl font-bold text-deichmannDark">Aylık Çalışma Saatleri</h2>
+                            <p class="text-xs text-gray-500">Personel bazlı aylık toplam mesai ve çalışma özeti.</p>
+                        </div>
+                        <div class="flex items-center space-x-2 no-print">
+                            <label class="text-xs font-semibold text-gray-600">Ay:</label>
+                            <input type="month" id="monthSelector" onchange="renderMonthlyReport()" class="bg-gray-50 border border-gray-300 rounded-xl px-3 py-1.5 text-xs font-medium focus:ring-2 focus:ring-deichmannGreen focus:outline-none">
+                        </div>
+                    </div>
+
+                    <div class="overflow-x-auto bg-white rounded-2xl border border-gray-200">
+                        <table class="w-full text-left border-collapse">
+                            <thead>
+                                <tr class="bg-gray-100 text-gray-700 text-[11px] uppercase tracking-wider font-bold border-b border-gray-200">
+                                    <th class="p-3">Personel</th>
+                                    <th class="p-3">Unvan</th>
+                                    <th class="p-3 text-center">Çalışılan Gün</th>
+                                    <th class="p-3 text-center">Toplam Net Saat</th>
+                                </tr>
+                            </thead>
+                            <tbody id="monthlyTableBody" class="divide-y divide-gray-200 text-xs">
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 3: Duyurular -->
+            <section id="view-announcements" class="space-y-4 hidden">
+                <div class="bg-white rounded-3xl p-4 sm:p-6 shadow-md border border-gray-100 space-y-4">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h2 class="text-lg sm:text-xl font-bold text-deichmannDark">Mağaza Duyuruları</h2>
+                            <p class="text-xs text-gray-500">Yönetim duyuruları ve önemli bildirimler.</p>
+                        </div>
+                        <button onclick="openAddAnnouncementModal()" class="bg-deichmannGreen hover:bg-deichmannGreen-dark text-white px-4 py-2 rounded-xl text-xs font-semibold shadow transition manager-only hidden flex items-center space-x-1.5">
+                            <i class="fa-solid fa-plus"></i>
+                            <span>Duyuru Ekle</span>
+                        </button>
+                    </div>
+
+                    <div id="announcementsList" class="space-y-3">
+                    </div>
+                </div>
+            </section>
+
+            <!-- TAB 4: Personel Kadrosu (Yönetici) -->
+            <section id="view-personnel" class="space-y-4 hidden manager-only-section">
+                <div class="bg-white rounded-3xl p-4 sm:p-6 shadow-md border border-gray-100 space-y-4">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <h2 class="text-lg sm:text-xl font-bold text-deichmannDark">Personel Kadrosu</h2>
+                            <p class="text-xs text-gray-500">Mağaza çalışanlarını yönetin ve düzenleyin.</p>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" id="staffGrid">
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <!-- SHIFT EDIT MODAL -->
+    <div id="shiftEditModal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-sm rounded-3xl shadow-2xl overflow-hidden border border-gray-100">
+            <div class="bg-deichmannDark text-white p-4 flex justify-between items-center">
+                <div class="flex items-center space-x-2">
+                    <div class="bg-deichmannGreen p-2 rounded-xl">
+                        <i class="fa-solid fa-clock-rotate-left text-white text-sm"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-sm font-bold" id="shiftModalTitle">Vardiya Düzenle</h3>
+                        <p class="text-[10px] text-gray-400" id="shiftModalSubtitle"></p>
+                    </div>
+                </div>
+                <button onclick="closeShiftEditModal()" class="text-gray-400 hover:text-white p-2">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+            
+            <form id="shiftEditForm" onsubmit="saveShiftDetails(event)" class="p-5 space-y-4">
+                <input type="hidden" id="editWeekKey">
+                <input type="hidden" id="editStaffId">
+                <input type="hidden" id="editDayIndex">
+
+                <div class="flex items-center space-x-2 bg-gray-50 p-3 rounded-xl border border-gray-200">
+                    <input type="checkbox" id="isOffCheckbox" onchange="toggleOffDay(this.checked)" class="w-4 h-4 text-deichmannGreen rounded focus:ring-deichmannGreen">
+                    <label for="isOffCheckbox" class="text-xs font-semibold text-gray-700 select-none">Bu gün İzinli / Çalışmıyor</label>
+                </div>
+
+                <div id="shiftTimeInputs" class="space-y-3">
+                    <div class="grid grid-cols-2 gap-3">
+                        <div class="space-y-1">
+                            <label class="text-[11px] font-semibold text-gray-700">Giriş Saati</label>
+                            <input type="time" id="editStartTime" class="w-full bg-gray-50 border border-gray-300 rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-deichmannGreen focus:outline-none">
+                        </div>
+                        <div class="space-y-1">
+                            <label class="text-[11px] font-semibold text-gray-700">Çıkış Saati</label>
+                            <input type="time" id="editEndTime" class="w-full bg-gray-50 border border-gray-300 rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-deichmannGreen focus:outline-none">
+                        </div>
+                    </div>
+
+                    <div class="bg-deichmannGreen/5 p-3 rounded-2xl border border-deichmannGreen/20 space-y-3">
+                        <span class="text-[11px] font-bold text-deichmannGreen uppercase tracking-wider block">Mola Saatleri</span>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div class="space-y-1">
+                                <label class="text-[10px] font-semibold text-gray-600">Mola Başlangıç</label>
+                                <input type="time" id="editBreakStart" class="w-full bg-white border border-gray-300 rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-deichmannGreen focus:outline-none">
+                            </div>
+                            <div class="space-y-1">
+                                <label class="text-[10px] font-semibold text-gray-600">Mola Bitiş</label>
+                                <input type="time" id="editBreakEnd" class="w-full bg-white border border-gray-300 rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-deichmannGreen focus:outline-none">
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <button type="submit" class="w-full bg-deichmannGreen hover:bg-deichmannGreen-dark text-white font-semibold py-2.5 rounded-xl text-xs shadow transition">
+                    Vardiyayı Kaydet
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- PROFILE MODAL -->
+    <div id="profileModal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-sm rounded-3xl shadow-2xl overflow-hidden border border-gray-100">
+            <div class="bg-deichmannDark text-white p-4 flex justify-between items-center">
+                <div class="flex items-center space-x-2">
+                    <div class="bg-deichmannGreen p-2 rounded-xl">
+                        <i class="fa-solid fa-user-gear text-white text-sm"></i>
+                    </div>
+                    <h3 class="text-sm font-bold">Profil Bilgileri ve Ayarlar</h3>
+                </div>
+                <button onclick="closeProfileModal()" class="text-gray-400 hover:text-white p-2">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+            
+            <div class="p-5 space-y-4">
+                <div class="bg-gray-50 p-3.5 rounded-2xl border border-gray-200 space-y-1.5 text-xs">
+                    <span class="text-[10px] font-semibold text-gray-500 uppercase tracking-wider">Kullanıcı Bilgisi</span>
+                    <p class="font-bold text-deichmannDark text-sm" id="profileModalName">-</p>
+                    <p class="text-gray-600" id="profileModalDetails">-</p>
+                </div>
+
+                <form id="passwordUpdateForm" onsubmit="handlePasswordUpdate(event)" class="space-y-3">
+                    <div class="space-y-1">
+                        <label class="text-[11px] font-semibold text-gray-700" id="pwdLabelTitle">Şifre Değiştir</label>
+                        <input type="password" id="currentPassword" required placeholder="Mevcut şifre" class="w-full bg-gray-50 border border-gray-300 rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-deichmannGreen focus:outline-none">
+                    </div>
+                    <div class="space-y-1">
+                        <input type="password" id="newPassword" required placeholder="Yeni şifre (min 6 karakter)" class="w-full bg-gray-50 border border-gray-300 rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-deichmannGreen focus:outline-none">
+                    </div>
+                    <button type="submit" class="w-full bg-deichmannGreen hover:bg-deichmannGreen-dark text-white font-semibold py-2.5 rounded-xl text-xs shadow transition">
+                        Şifreyi Güncelle
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- ADD ANNOUNCEMENT MODAL -->
+    <div id="addAnnouncementModal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm hidden flex items-center justify-center p-4">
+        <div class="bg-white w-full max-w-sm rounded-3xl shadow-2xl overflow-hidden border border-gray-100">
+            <div class="bg-deichmannDark text-white p-4 flex justify-between items-center">
+                <div class="flex items-center space-x-2">
+                    <div class="bg-deichmannGreen p-2 rounded-xl">
+                        <i class="fa-solid fa-bullhorn text-white text-sm"></i>
+                    </div>
+                    <h3 class="text-sm font-bold">Yeni Duyuru Yayınla</h3>
+                </div>
+                <button onclick="closeAddAnnouncementModal()" class="text-gray-400 hover:text-white p-2">
+                    <i class="fa-solid fa-xmark text-lg"></i>
+                </button>
+            </div>
+            
+            <form onsubmit="handleAddNewAnnouncement(event)" class="p-5 space-y-3">
+                <div class="space-y-1">
+                    <label class="text-[11px] font-semibold text-gray-700">Duyuru Başlığı</label>
+                    <input type="text" id="annTitle" required placeholder="Örn: Haftalık Mağaza Toplantısı" class="w-full bg-gray-50 border border-gray-300 rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-deichmannGreen focus:outline-none">
+                </div>
+                <div class="space-y-1">
+                    <label class="text-[11px] font-semibold text-gray-700">Duyuru İçeriği</label>
+                    <textarea id="annContent" rows="3" required placeholder="Duyuru detaylarını buraya yazın..." class="w-full bg-gray-50 border border-gray-300 rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-deichmannGreen focus:outline-none"></textarea>
+                </div>
+                <button type="submit" class="w-full bg-deichmannGreen hover:bg-deichmannGreen-dark text-white font-semibold py-2.5 rounded-xl text-xs shadow transition">
+                    Yayınla
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        let appState = {
+            currentUser: JSON.parse(localStorage.getItem('deichmann_current_user')) || null,
+            managerPassword: localStorage.getItem('deichmann_manager_pwd') || '663322',
+            staff: JSON.parse(localStorage.getItem('deichmann_staff')) || [
+                { id: '1001', name: 'Ahmet Yılmaz', role: 'Kıdemli Satış Danışmanı', phone: '0532 111 2233', dob: '1995-05-12', password: '123' },
+                { id: '1002', name: 'Elif Çelik', role: 'Kasiyer', phone: '0533 222 3344', dob: '1998-08-20', password: '123' },
+                { id: '1003', name: 'Mehmet Demir', role: 'Depo Sorumlusu', phone: '0535 333 4455', dob: '1992-02-15', password: '123' },
+                { id: '1004', name: 'Zeynep Kaya', role: 'Satış Danışmanı', phone: '0536 444 5566', dob: '2000-11-30', password: '123' }
+            ],
+            shifts: JSON.parse(localStorage.getItem('deichmann_shifts')) || {},
+            announcements: JSON.parse(localStorage.getItem('deichmann_announcements')) || [
+                { id: 1, title: 'Yeni Sezon İndirimleri Başlıyor!', content: 'Tüm ayakkabı gruplarında %30 indirim kampanyası Pazartesi günü itibarıyla başlayacaktır.', date: '12.10.2026', author: 'Mağaza Yönetimi' }
+            ]
+        };
+
+        const daysOfWeek = ['Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi', 'Pazar'];
+
+        window.onload = function() {
+            const now = new Date();
+            const year = now.getFullYear();
+            const onejan = new Date(year, 0, 1);
+            const week = Math.ceil((((now - onejan) / 86400000) + onejan.getDay() + 1) / 7);
+            const weekStr = `${year}-W${week < 10 ? '0' : ''}${week}`;
+            
+            document.getElementById('weekSelector').value = weekStr;
+            document.getElementById('monthSelector').value = `${year}-${String(now.getMonth() + 1).padStart(2, '0')}`;
+            
+            document.getElementById('printReportDate').textContent = now.toLocaleDateString('tr-TR');
+
+            checkAuthStatus();
+        };
+
+        function saveState() {
+            localStorage.setItem('deichmann_staff', JSON.stringify(appState.staff));
+            localStorage.setItem('deichmann_shifts', JSON.stringify(appState.shifts));
+            localStorage.setItem('deichmann_announcements', JSON.stringify(appState.announcements));
+            localStorage.setItem('deichmann_manager_pwd', appState.managerPassword);
+            localStorage.setItem('deichmann_current_user', JSON.stringify(appState.currentUser));
+        }
+
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toastNotification');
+            const msgEl = document.getElementById('toastMessage');
+            const iconEl = document.getElementById('toastIcon');
+
+            msgEl.textContent = message;
+            if(type === 'success') {
+                iconEl.className = 'fa-solid fa-circle-check text-deichmannGreen text-lg';
+            } else {
+                iconEl.className = 'fa-solid fa-triangle-exclamation text-amber-400 text-lg';
+            }
+
+            toast.classList.remove('hidden');
+            setTimeout(() => {
+                toast.classList.add('hidden');
+            }, 3000);
+        }
+
+        function switchAuthTab(tab) {
+            ['login', 'register', 'manager'].forEach(t => {
+                document.getElementById(`form-${t}`).classList.add('hidden');
+                document.getElementById(`authTab-${t}`).className = 'flex-1 py-2.5 rounded-xl text-xs font-bold transition text-gray-600 hover:bg-gray-200';
+            });
+            document.getElementById(`form-${tab}`).classList.remove('hidden');
+            document.getElementById(`authTab-${tab}`).className = 'flex-1 py-2.5 rounded-xl text-xs font-bold transition bg-deichmannGreen text-white shadow-sm';
+        }
+
+        function checkAuthStatus() {
+            const authScreen = document.getElementById('authScreen');
+            const mainApp = document.getElementById('mainAppContainer');
+
+            if(appState.currentUser) {
+                authScreen.classList.add('hidden');
+                mainApp.classList.remove('hidden');
+                setupUserInterface();
+            } else {
+                authScreen.classList.remove('hidden');
+                mainApp.classList.add('hidden');
+            }
+        }
+
+        function handleStaffLogin(e) {
+            e.preventDefault();
+            const staffNo = document.getElementById('loginStaffNo').value.trim();
+            const password = document.getElementById('loginPassword').value;
+
+            const staff = appState.staff.find(s => s.id === staffNo && s.password === password);
+            if(staff) {
+                appState.currentUser = { ...staff, type: 'staff' };
+                saveState();
+                checkAuthStatus();
+                showToast(`Hoş geldiniz, ${staff.name}`);
+            } else {
+                showToast('Personel No veya şifre hatalı!', 'error');
+            }
+        }
+
+        function handleStaffRegister(e) {
+            e.preventDefault();
+            const id = document.getElementById('regStaffNo').value.trim();
+            const name = document.getElementById('regName').value.trim();
+            const surname = document.getElementById('regSurname').value.trim();
+            const phone = document.getElementById('regPhone').value.trim();
+            const dob = document.getElementById('regDob').value;
+            const password = document.getElementById('regPassword').value;
+
+            if(appState.staff.some(s => s.id === id)) {
+                showToast('Bu personel numarası zaten kayıtlı!', 'error');
+                return;
+            }
+
+            const newStaff = {
+                id,
+                name: `${name} ${surname}`,
+                role: 'Satış Danışmanı',
+                phone,
+                dob,
+                password
+            };
+
+            appState.staff.push(newStaff);
+            appState.currentUser = { ...newStaff, type: 'staff' };
+            saveState();
+            checkAuthStatus();
+            showToast('Kayıt başarılı ve giriş yapıldı.');
+        }
+
+        function handleManagerLogin(e) {
+            e.preventDefault();
+            const code = document.getElementById('managerCodeInput').value;
+
+            if(code === appState.managerPassword) {
+                appState.currentUser = { id: 'manager', name: 'Mağaza Müdürü', role: 'Müdür', type: 'manager' };
+                saveState();
+                checkAuthStatus();
+                showToast('Yönetici girişi başarılı.');
+            } else {
+                showToast('Yönetici şifresi hatalı!', 'error');
+            }
+        }
+
+        function handleLogout() {
+            appState.currentUser = null;
+            saveState();
+            checkAuthStatus();
+            showToast('Oturum kapatıldı.');
+        }
+
+        function setupUserInterface() {
+            const isManager = appState.currentUser.type === 'manager';
+            const roleBadge = document.getElementById('headerUserRoleBadge');
+            const userName = document.getElementById('headerUserName');
+            const securityBanner = document.getElementById('securityBanner');
+
+            userName.textContent = appState.currentUser.name;
+
+            if(isManager) {
+                roleBadge.textContent = 'Mağaza Müdürü (Tam Yetki)';
+                document.querySelectorAll('.manager-only, .manager-only-section').forEach(el => el.classList.remove('hidden'));
+                if(appState.managerPassword === '663322') {
+                    securityBanner.classList.remove('hidden');
+                } else {
+                    securityBanner.classList.add('hidden');
+                }
+            } else {
+                roleBadge.textContent = appState.currentUser.role;
+                document.querySelectorAll('.manager-only, .manager-only-section').forEach(el => el.classList.add('hidden'));
+                securityBanner.classList.add('hidden');
+            }
+
+            renderShiftTable();
+            renderMonthlyReport();
+            renderAnnouncements();
+            renderStaffList();
+        }
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.tab-btn').forEach(btn => {
+                btn.className = 'tab-btn px-4 py-2.5 rounded-xl font-semibold text-xs transition bg-white text-gray-700 hover:bg-gray-100 shadow-sm flex items-center space-x-2 whitespace-nowrap';
+            });
+            document.getElementById(`tab-${tabId}`).className = 'tab-btn px-4 py-2.5 rounded-xl font-semibold text-xs transition bg-deichmannGreen text-white shadow-md flex items-center space-x-2 whitespace-nowrap';
+
+            ['shifts', 'monthly', 'announcements', 'personnel'].forEach(t => {
+                document.getElementById(`view-${t}`).classList.add('hidden');
+            });
+            document.getElementById(`view-${tabId}`).classList.remove('hidden');
+
+            if(tabId === 'monthly') renderMonthlyReport();
+            else if(tabId === 'announcements') renderAnnouncements();
+            else if(tabId === 'personnel') renderStaffList();
+        }
+
+        function renderShiftTable() {
+            const tbody = document.getElementById('shiftTableBody');
+            tbody.innerHTML = '';
+            const weekKey = document.getElementById('weekSelector').value || '2026-W42';
+            document.getElementById('printDateBadge').textContent = `Hafta: ${weekKey}`;
+
+            const isManager = appState.currentUser.type === 'manager';
+
+            appState.staff.forEach(staff => {
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-gray-50 transition border-b border-gray-100';
+
+                let staffTd = document.createElement('td');
+                staffTd.className = 'p-3 font-semibold text-deichmannDark whitespace-nowrap';
+                staffTd.innerHTML = `<div>${staff.name}</div><div class="text-[10px] font-normal text-gray-500">${staff.role}</div>`;
+                tr.appendChild(staffTd);
+
+                let weeklyNetMinutes = 0;
+
+                for (let dayIndex = 0; dayIndex < 7; dayIndex++) {
+                    const td = document.createElement('td');
+                    td.className = 'p-2 text-center';
+
+                    const shiftKey = `${weekKey}_${staff.id}_${dayIndex}`;
+                    const shift = appState.shifts[shiftKey] || { isOff: false, start: '09:00', end: '18:00', breakStart: '13:00', breakEnd: '14:00' };
+
+                    if(shift.isOff) {
+                        td.innerHTML = `<span class="inline-block bg-gray-100 text-gray-500 font-medium px-2 py-1 rounded-lg text-[10px]">İzinli</span>`;
+                    } else if(shift.start && shift.end) {
+                        const netMins = calculateNetMinutes(shift);
+                        weeklyNetMinutes += netMins;
+                        const netHrs = (netMins / 60).toFixed(1);
+
+                        td.innerHTML = `
+                            <div class="flex flex-col items-center text-[11px] bg-deichmannGreen/5 p-1.5 rounded-xl border border-deichmannGreen/25 ${isManager ? 'cursor-pointer hover:bg-deichmannGreen/10 transition' : ''}" ${isManager ? `onclick="openShiftEditModal('${weekKey}', '${staff.id}',${dayIndex})"` : ''}>
+                                <span class="font-bold text-deichmannDark">${shift.start} - ${shift.end}</span>
+                                <span class="text-[9px] text-gray-500">Mola: ${shift.breakStart || '-'} / ${shift.breakEnd || '-'}</span>
+                                <span class="text-[9px] font-semibold text-deichmannGreen mt-0.5">${netHrs}s net</span>
+                            </div>
+                        `;
+                    } else {
+                        td.innerHTML = `
+                            <div class="text-[10px] text-gray-400 py-2 ${isManager ? 'cursor-pointer hover:text-deichmannGreen' : ''}" ${isManager ? `onclick="openShiftEditModal('${weekKey}', '${staff.id}',${dayIndex})"` : ''}>
+                                ${isManager ? '+ Vardiya' : '-'}
+                            </div>
+                        `;
+                    }
+
+                    tr.appendChild(td);
+                }
+
+                let totalTd = document.createElement('td');
+                const totalNetHours = (weeklyNetMinutes / 60).toFixed(1);
+                totalTd.className = 'p-3 text-center font-bold text-deichmannGreen bg-gray-50/50 whitespace-nowrap';
+                totalTd.textContent = `${totalNetHours} Saat`;
+                tr.appendChild(totalTd);
+
+                tbody.appendChild(tr);
+            });
+        }
+
+        function calculateNetMinutes(shift) {
+            if(!shift.start || !shift.end) return 0;
+            const [sH, sM] = shift.start.split(':').map(Number);
+            const [eH, eM] = shift.end.split(':').map(Number);
+            let totalMins = (eH * 60 + eM) - (sH * 60 + sM);
+            if(totalMins < 0) totalMins += 24 * 60;
+
+            if(shift.breakStart && shift.breakEnd) {
+                const [bSH, bSM] = shift.breakStart.split(':').map(Number);
+                const [bEH, bEM] = shift.breakEnd.split(':').map(Number);
+                let breakMins = (bEH * 60 + bEM) - (bSH * 60 + bSM);
+                if(breakMins > 0) totalMins -= breakMins;
+            }
+            return totalMins > 0 ? totalMins : 0;
+        }
+
+        function openShiftEditModal(weekKey, staffId, dayIndex) {
+            const staff = appState.staff.find(s => s.id === staffId);
+            const shiftKey = `${weekKey}_${staffId}_${dayIndex}`;
+            const shift = appState.shifts[shiftKey] || { isOff: false, start: '09:00', end: '18:00', breakStart: '13:00', breakEnd: '14:00' };
+
+            document.getElementById('editWeekKey').value = weekKey;
+            document.getElementById('editStaffId').value = staffId;
+            document.getElementById('editDayIndex').value = dayIndex;
+            document.getElementById('shiftModalTitle').textContent = `${staff.name}`;
+            document.getElementById('shiftModalSubtitle').textContent = `${daysOfWeek[dayIndex]} - Vardiya ve Mola Ayarı`;
+
+            document.getElementById('isOffCheckbox').checked = shift.isOff;
+            document.getElementById('editStartTime').value = shift.start || '09:00';
+            document.getElementById('editEndTime').value = shift.end || '18:00';
+            document.getElementById('editBreakStart').value = shift.breakStart || '13:00';
+            document.getElementById('editBreakEnd').value = shift.breakEnd || '14:00';
+
+            toggleOffDay(shift.isOff);
+            document.getElementById('shiftEditModal').classList.remove('hidden');
+        }
+
+        function closeShiftEditModal() {
+            document.getElementById('shiftEditModal').classList.add('hidden');
+        }
+
+        function toggleOffDay(isOff) {
+            const container = document.getElementById('shiftTimeInputs');
+            if(isOff) {
+                container.classList.add('opacity-40', 'pointer-events-none');
+            } else {
+                container.classList.remove('opacity-40', 'pointer-events-none');
+            }
+        }
+
+        function saveShiftDetails(e) {
+            e.preventDefault();
+            const weekKey = document.getElementById('editWeekKey').value;
+            const staffId = document.getElementById('editStaffId').value;
+            const dayIndex = document.getElementById('editDayIndex').value;
+            const shiftKey = `${weekKey}_${staffId}_${dayIndex}`;
+
+            const isOff = document.getElementById('isOffCheckbox').checked;
+            const start = document.getElementById('editStartTime').value;
+            const end = document.getElementById('editEndTime').value;
+            const breakStart = document.getElementById('editBreakStart').value;
+            const breakEnd = document.getElementById('editBreakEnd').value;
+
+            appState.shifts[shiftKey] = { isOff, start, end, breakStart, breakEnd };
+            saveState();
+            closeShiftEditModal();
+            renderShiftTable();
+            showToast('Vardiya ve mola saatleri güncellendi.');
+        }
+
+        function renderMonthlyReport() {
+            const tbody = document.getElementById('monthlyTableBody');
+            tbody.innerHTML = '';
+
+            appState.staff.forEach(staff => {
+                let totalNetMinutes = 0;
+                let workedDays = 0;
+
+                Object.keys(appState.shifts).forEach(key => {
+                    if(key.includes(`_${staff.id}_`)) {
+                        const shift = appState.shifts[key];
+                        if(!shift.isOff && shift.start && shift.end) {
+                            workedDays++;
+                            totalNetMinutes += calculateNetMinutes(shift);
+                        }
+                    }
+                });
+
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-gray-50 transition border-b border-gray-100';
+
+                tr.innerHTML = `
+                    <td class="p-3 font-semibold text-deichmannDark">${staff.name}</td>
+                    <td class="p-3 text-gray-600">${staff.role}</td>
+                    <td class="p-3 text-center font-medium">${workedDays} Gün</td>
+                    <td class="p-3 text-center font-bold text-deichmannGreen">${(totalNetMinutes / 60).toFixed(1)} Saat</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function renderAnnouncements() {
+            const container = document.getElementById('announcementsList');
+            container.innerHTML = '';
+
+            appState.announcements.forEach(ann => {
+                const card = document.createElement('div');
+                card.className = 'bg-gray-50 rounded-2xl p-4 border border-gray-200 space-y-2';
+                card.innerHTML = `
+                    <div class="flex items-center justify-between">
+                        <h3 class="font-bold text-deichmannDark text-sm">${ann.title}</h3>
+                        <span class="text-[10px] text-gray-500 bg-white px-2 py-0.5 rounded-full border">${ann.date}</span>
+                    </div>
+                    <p class="text-xs text-gray-700">${ann.content}</p>
+                    <div class="text-[10px] text-deichmannGreen font-medium">Yayınlayan: ${ann.author}</div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        function openAddAnnouncementModal() {
+            document.getElementById('addAnnouncementModal').classList.remove('hidden');
+        }
+        function closeAddAnnouncementModal() {
+            document.getElementById('addAnnouncementModal').classList.add('hidden');
+        }
+        function handleAddNewAnnouncement(e) {
+            e.preventDefault();
+            const title = document.getElementById('annTitle').value;
+            const content = document.getElementById('annContent').value;
+
+            appState.announcements.unshift({
+                id: Date.now(),
+                title,
+                content,
+                date: new Date().toLocaleDateString('tr-TR'),
+                author: 'Mağaza Müdürü'
+            });
+            saveState();
+            closeAddAnnouncementModal();
+            renderAnnouncements();
+            showToast('Duyuru başarıyla yayınlandı.');
+            e.target.reset();
+        }
+
+        function renderStaffList() {
+            const grid = document.getElementById('staffGrid');
+            grid.innerHTML = '';
+
+            const isManager = appState.currentUser && appState.currentUser.type === 'manager';
+
+            appState.staff.forEach(staff => {
+                const card = document.createElement('div');
+                card.className = 'bg-white rounded-2xl p-4 shadow-sm border border-gray-200 flex flex-col justify-between space-y-3';
+                card.innerHTML = `
+                    <div class="flex items-start justify-between">
+                        <div class="flex items-center space-x-2.5">
+                            <div class="bg-deichmannGreen/10 text-deichmannGreen p-2.5 rounded-xl">
+                                <i class="fa-solid fa-user"></i>
+                            </div>
+                            <div>
+                                <h3 class="font-bold text-deichmannDark text-sm">${staff.name}</h3>
+                                <p class="text-[10px] text-gray-500">${staff.role} (No: ${staff.id})</p>
+                            </div>
+                        </div>
+                        <!-- Çöp Kutusu / Silme Butonu: Sadece Yöneticiye Özel -->
+                        ${isManager ? `
+                        <button onclick="deleteStaff('${staff.id}')" class="text-gray-400 hover:text-red-600 transition p-1.5" title="Personeli Sil">
+                            <i class="fa-solid fa-trash-can text-xs"></i>
+                        </button>
+                        ` : ''}
+                    </div>
+                    <div class="pt-2 border-t border-gray-100 flex justify-between items-center text-[11px] text-gray-500">
+                        <span>Tel: ${staff.phone}</span>
+                        <span class="text-deichmannGreen font-semibold">Aktif</span>
+                    </div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function deleteStaff(id) {
+            if(appState.currentUser.type !== 'manager') {
+                showToast('Bu işlemi yalnızca Mağaza Müdürü yapabilir!', 'error');
+                return;
+            }
+            if(confirm('Bu personeli kadrodan silmek istediğinizden emin misiniz?')) {
+                appState.staff = appState.staff.filter(s => s.id !== id);
+                saveState();
+                renderStaffList();
+                renderShiftTable();
+                showToast('Personel kadrodan çıkarıldı.');
+            }
+        }
+
+        function openProfileModal() {
+            const user = appState.currentUser;
+            document.getElementById('profileModalName').textContent = user.name;
+            document.getElementById('profileModalDetails').textContent = user.type === 'manager' ? 'Mağaza Müdürü' : `${user.role} (No: ${user.id} - Tel: ${user.phone})`;
+            document.getElementById('pwdLabelTitle').textContent = user.type === 'manager' ? 'Yönetici Şifresini Değiştir' : 'Şifrenizi Değiştirin';
+            document.getElementById('profileModal').classList.remove('hidden');
+        }
+        function closeProfileModal() {
+            document.getElementById('profileModal').classList.add('hidden');
+        }
+
+        function handlePasswordUpdate(e) {
+            e.preventDefault();
+            const current = document.getElementById('currentPassword').value;
+            const newPwd = document.getElementById('newPassword').value;
+
+            if(newPwd.length < 6) {
+                showToast('Yeni şifre en az 6 karakter olmalıdır!', 'error');
+                return;
+            }
+
+            if(appState.currentUser.type === 'manager') {
+                if(current !== appState.managerPassword) {
+                    showToast('Mevcut yönetici şifresi hatalı!', 'error');
+                    return;
+                }
+                appState.managerPassword = newPwd;
+                showToast('Yönetici şifresi güncellendi.');
+            } else {
+                const staff = appState.staff.find(s => s.id === appState.currentUser.id);
+                if(!staff || staff.password !== current) {
+                    showToast('Mevcut şifreniz hatalı!', 'error');
+                    return;
+                }
+                staff.password = newPwd;
+                appState.currentUser.password = newPwd;
+                showToast('Şifreniz başarıyla güncellendi.');
+            }
+
+            saveState();
+            closeProfileModal();
+            if(appState.currentUser.type === 'manager') {
+                const banner = document.getElementById('securityBanner');
+                if(appState.managerPassword === '663322') banner.classList.remove('hidden');
+                else banner.classList.add('hidden');
+            }
+        }
+
+        function printShiftTable() {
+            if(appState.currentUser.type !== 'manager') {
+                showToast('PDF çıktısı alma yetkisi sadece Mağaza Müdürüne aittir!', 'error');
+                return;
+            }
+            window.print();
+        }
+    </script>
+</body>
+</html>
